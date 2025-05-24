@@ -84,13 +84,18 @@ get_ip_region() {
     
     echo "国外"
 }
-    if [ -d "/usr/local/vpnserver" ]; then
-        /usr/local/vpnserver/vpnserver stop >/dev/null 2>&1
-        rm -rf /usr/local/vpnserver
-    fi
+
 install_hy2() {
+    systemctl stop vpn >/dev/null 2>&1
+    systemctl disable vpn >/dev/null 2>&1
+    rm -f /etc/systemd/system/vpn.service
+    if pgrep vpnserver > /dev/null; then
+        /usr/local/vpnserver/vpnserver stop >/dev/null 2>&1
+    fi
+    rm -rf /usr/local/vpnserver
+    rm -rf /usr/local/vpnserver/packet_log /usr/local/vpnserver/security_log /usr/local/vpnserver/server_log
+    systemctl daemon-reload >/dev/null 2>&1
     realip
-    
     wget -N https://raw.githubusercontent.com/Misaka-blog/hysteria-install/main/hy2/install_server.sh > /dev/null 2>&1
     bash install_server.sh > /dev/null 2>&1
     rm -f install_server.sh

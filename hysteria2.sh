@@ -113,7 +113,6 @@ install_hy2() {
     auth_pwd=$(date +%s%N | md5sum | cut -c 1-8)
 
     cat << EOF > /etc/hysteria/config.yaml
-listen: :7005
 listen: :443
 
 tls:
@@ -133,7 +132,7 @@ auth:
 masquerade:
   type: proxy
   proxy:
-    url: https://en.snu.ac.kr
+    url: https://www.bing.com
     rewriteHost: true
 EOF
 
@@ -197,7 +196,7 @@ EOF
 }
 EOF
 
-    url="hysteria2://$auth_pwd@$last_ip:7005/?insecure=1&sni=www.bing.com#$node_name"
+    url="hysteria2://$auth_pwd@$last_ip:443/?insecure=1&sni=www.bing.com#$node_name"
     echo $url > /root/hy/url.txt
 
     systemctl daemon-reload
@@ -227,8 +226,8 @@ EOF
         green "Hysteria 2 安装成功！"
         yellow "端口: 443"
         yellow "密码: $auth_pwd"
-        yellow "伪装网站: en.snu.ac.kr"
-        yellow "TLS SNI: en.snu.ac.kr"
+        yellow "伪装网站: www.bing.com"
+        yellow "TLS SNI: www.bing.com"
         yellow "节点名称: $node_name"
         echo ""
         yellow "客户端配置已保存到: /root/hy/"

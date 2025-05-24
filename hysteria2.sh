@@ -124,6 +124,10 @@ quic:
   maxStreamReceiveWindow: 16777216
   initConnReceiveWindow: 33554432
   maxConnReceiveWindow: 33554432
+  max_udp_payload_size: 1500
+
+obfs:
+  type: tls
 
 auth:
   type: password
@@ -154,12 +158,15 @@ auth: $auth_pwd
 tls:
   sni: www.bing.com
   insecure: true
+  utls:
+    fingerprint: chrome
 
 quic:
   initStreamReceiveWindow: 16777216
   maxStreamReceiveWindow: 16777216
   initConnReceiveWindow: 33554432
   maxConnReceiveWindow: 33554432
+  max_udp_payload_size: 1500
 
 fastOpen: true
 
@@ -168,7 +175,9 @@ socks5:
 
 transport:
   udp:
-    hopInterval: 30s 
+    hopInterval: 30s
+  obfs:
+    type: tls
 EOF
 
     cat << EOF > /root/hy/hy-client.json
@@ -177,7 +186,10 @@ EOF
   "auth": "$auth_pwd",
   "tls": {
     "sni": "www.bing.com",
-    "insecure": true
+    "insecure": true,
+    "utls": {
+      "fingerprint": "chrome"
+    }
   },
   "quic": {
     "initStreamReceiveWindow": 16777216,
@@ -191,6 +203,9 @@ EOF
   "transport": {
     "udp": {
       "hopInterval": "30s"
+    },
+    "obfs": {
+      "type": "tls"
     }
   }
 }

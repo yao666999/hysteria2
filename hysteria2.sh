@@ -173,7 +173,7 @@ EOF
 
     cat << EOF > /root/hy/hy-client.json
 {
-  "server": "$last_ip:7005",
+  "server": "$last_ip:443",
   "auth": "$auth_pwd",
   "tls": {
     "sni": "www.bing.com",

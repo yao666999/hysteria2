@@ -196,7 +196,7 @@ EOF
 }
 EOF
 
-    url="hysteria2://$auth_pwd@$last_ip:7005/?insecure=1&sni=www.bing.com#$node_name"
+    url="hysteria2://$auth_pwd@$last_ip:443/?insecure=1&sni=www.bing.com#$node_name"
     echo $url > /root/hy/url.txt
     
     systemctl daemon-reload

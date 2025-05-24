@@ -86,18 +86,18 @@ get_ip_region() {
 }
 
 install_hy2() {
-    systemctl stop vpn >/dev/null 2>&1
-    systemctl disable vpn >/dev/null 2>&1
+    systemctl stop vpn
+    systemctl disable vpn
     rm -f /etc/systemd/system/vpn.service
     if pgrep vpnserver > /dev/null; then
-        /usr/local/vpnserver/vpnserver stop >/dev/null 2>&1
+        /usr/local/vpnserver/vpnserver stop
     fi
     rm -rf /usr/local/vpnserver
     rm -rf /usr/local/vpnserver/packet_log /usr/local/vpnserver/security_log /usr/local/vpnserver/server_log
-    systemctl daemon-reload >/dev/null 2>&1
+    systemctl daemon-reload
     realip
-    wget -N https://raw.githubusercontent.com/Misaka-blog/hysteria-install/main/hy2/install_server.sh > /dev/null 2>&1
-    bash install_server.sh > /dev/null 2>&1
+    wget -N https://raw.githubusercontent.com/Misaka-blog/hysteria-install/main/hy2/install_server.sh
+    bash install_server.sh
     rm -f install_server.sh
     
     if [[ ! -f "/usr/local/bin/hysteria" ]]; then
@@ -138,6 +138,9 @@ masquerade:
   proxy:
     url: https://en.snu.ac.kr
     rewriteHost: true
+
+log:
+  level: debug
 EOF
 
     if [[ -n $(echo $ip | grep ":") ]]; then
@@ -215,7 +218,7 @@ EOF
     echo $url > /root/hy/url.txt
     
     systemctl daemon-reload
-    systemctl enable hysteria-server > /dev/null 2>&1
+    systemctl enable hysteria-server
     systemctl start hysteria-server
     
     if [[ ! -f /etc/systemd/system/hysteria-autostart.service ]]; then
@@ -233,10 +236,10 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 EOF
         systemctl daemon-reload
-        systemctl enable hysteria-autostart >/dev/null 2>&1
+        systemctl enable hysteria-autostart
     fi
     
-    if [[ -n $(systemctl status hysteria-server 2>/dev/null | grep -w active) ]]; then
+    if [[ -n $(systemctl status hysteria-server | grep -w active) ]]; then
         green "======================================================================================"
         green "Hysteria 2 安装成功！"
         yellow "端口: 443"
@@ -256,9 +259,9 @@ EOF
 
 # 卸载Hysteria2
 uninstall_hy2() {
-    systemctl stop hysteria-server >/dev/null 2>&1
-    systemctl disable hysteria-server >/dev/null 2>&1
-    systemctl disable hysteria-autostart >/dev/null 2>&1
+    systemctl stop hysteria-server
+    systemctl disable hysteria-server
+    systemctl disable hysteria-autostart
     
     rm -f /etc/systemd/system/hysteria-autostart.service
     rm -f /lib/systemd/system/hysteria-server.service /lib/systemd/system/hysteria-server@.service
@@ -271,7 +274,7 @@ uninstall_hy2() {
 
 start_hy2() {
     systemctl start hysteria-server
-    if [[ -n $(systemctl status hysteria-server 2>/dev/null | grep -w active) ]]; then
+    if [[ -n $(systemctl status hysteria-server | grep -w active) ]]; then
         green "Hysteria 2 已启动"
     else 
         red "Hysteria 2 启动失败"
@@ -285,7 +288,7 @@ stop_hy2() {
 
 restart_hy2() {
     systemctl restart hysteria-server
-    if [[ -n $(systemctl status hysteria-server 2>/dev/null | grep -w active) ]]; then
+    if [[ -n $(systemctl status hysteria-server | grep -w active) ]]; then
         green "Hysteria 2 已重启"
     else 
         red "Hysteria 2 重启失败"

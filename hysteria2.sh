@@ -113,7 +113,7 @@ install_hy2() {
     auth_pwd=$(date +%s%N | md5sum | cut -c 1-8)
     
     cat << EOF > /etc/hysteria/config.yaml
-listen: :7005
+listen: :443
 
 tls:
   cert: /etc/hysteria/cert.crt

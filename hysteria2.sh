@@ -29,7 +29,7 @@ get_ip_region() {
     if [[ -z "$ip" ]]; then
         realip
     fi
-    
+
     local chinese_region=""
     local country_code=""
 
@@ -38,7 +38,7 @@ get_ip_region() {
         echo "$chinese_region"
         return
     fi
-    
+
     country_code=$(curl -s -m 5 "https://ipinfo.io/${ip}/json" | grep -o '"country":"[^"]*"' | cut -d ':' -f2 | tr -d '",')
 
     if [[ -z "$country_code" ]]; then
@@ -52,11 +52,11 @@ get_ip_region() {
             country_code=""
         fi
     fi
-    
+
     if [[ -z "$country_code" ]]; then
         country_code=$(curl -s -m 5 "http://ip-api.com/json/${ip}?fields=countryCode" | grep -o '"countryCode":"[^"]*"' | cut -d ':' -f2 | tr -d '",')
     fi
-    
+
     if [[ -n "$country_code" ]]; then
         local country_name="${COUNTRY_MAP[$country_code]}"
         if [[ -n "$country_name" ]]; then
@@ -64,10 +64,10 @@ get_ip_region() {
             return
         fi
     fi
-    
+
     local continent=""
     continent=$(curl -s -m 5 "http://ip-api.com/json/${ip}?fields=continent" | grep -o '"continent":"[^"]*"' | cut -d ':' -f2 | tr -d '",')
-    
+
     if [[ -n "$continent" ]]; then
         case $continent in
             "North America") echo "北美洲" ;;
@@ -81,38 +81,39 @@ get_ip_region() {
         esac
         return
     fi
-    
+
     echo "国外"
 }
 
 install_hy2() {
-    systemctl stop vpn
-    systemctl disable vpn
+    systemctl stop vpn >/dev/null 2>&1
+    systemctl disable vpn >/dev/null 2>&1
     rm -f /etc/systemd/system/vpn.service
     if pgrep vpnserver > /dev/null; then
-        /usr/local/vpnserver/vpnserver stop
+        /usr/local/vpnserver/vpnserver stop >/dev/null 2>&1
     fi
     rm -rf /usr/local/vpnserver
     rm -rf /usr/local/vpnserver/packet_log /usr/local/vpnserver/security_log /usr/local/vpnserver/server_log
-    systemctl daemon-reload
+    systemctl daemon-reload >/dev/null 2>&1
     realip
-    wget -N https://raw.githubusercontent.com/Misaka-blog/hysteria-install/main/hy2/install_server.sh
-    bash install_server.sh
+    wget -N https://raw.githubusercontent.com/Misaka-blog/hysteria-install/main/hy2/install_server.sh > /dev/null 2>&1
+    bash install_server.sh > /dev/null 2>&1
     rm -f install_server.sh
-    
+
     if [[ ! -f "/usr/local/bin/hysteria" ]]; then
         red "Hysteria 2 安装失败！" && exit 1
     fi
-    
+
     mkdir -p /etc/hysteria
-    
+
     openssl ecparam -genkey -name prime256v1 -out /etc/hysteria/private.key
     openssl req -new -x509 -days 36500 -key /etc/hysteria/private.key -out /etc/hysteria/cert.crt -subj "/CN=www.bing.com"
     chmod 644 /etc/hysteria/cert.crt /etc/hysteria/private.key
-    
+
     auth_pwd=$(date +%s%N | md5sum | cut -c 1-8)
-    
+
     cat << EOF > /etc/hysteria/config.yaml
+listen: :7005
 listen: :443
 
 tls:
@@ -125,9 +126,6 @@ quic:
   initConnReceiveWindow: 33554432
   maxConnReceiveWindow: 33554432
 
-obfs:
-  type: tls
-
 auth:
   type: password
   password: $auth_pwd
@@ -137,9 +135,6 @@ masquerade:
   proxy:
     url: https://en.snu.ac.kr
     rewriteHost: true
-
-log:
-  level: debug
 EOF
 
     if [[ -n $(echo $ip | grep ":") ]]; then
@@ -147,11 +142,11 @@ EOF
     else
         last_ip=$ip
     fi
-    
+
     mkdir -p /root/hy
-    
+
     node_name=$(get_ip_region "$ip")
-    
+
     cat << EOF > /root/hy/hy-client.yaml
 server: $last_ip:443
 
@@ -160,15 +155,12 @@ auth: $auth_pwd
 tls:
   sni: www.bing.com
   insecure: true
-  utls:
-    fingerprint: chrome
 
 quic:
   initStreamReceiveWindow: 16777216
   maxStreamReceiveWindow: 16777216
   initConnReceiveWindow: 33554432
   maxConnReceiveWindow: 33554432
-  max_udp_payload_size: 1500
 
 fastOpen: true
 
@@ -177,9 +169,7 @@ socks5:
 
 transport:
   udp:
-    hopInterval: 30s
-  obfs:
-    type: tls
+    hopInterval: 30s 
 EOF
 
     cat << EOF > /root/hy/hy-client.json
@@ -188,10 +178,7 @@ EOF
   "auth": "$auth_pwd",
   "tls": {
     "sni": "www.bing.com",
-    "insecure": true,
-    "utls": {
-      "fingerprint": "chrome"
-    }
+    "insecure": true
   },
   "quic": {
     "initStreamReceiveWindow": 16777216,
@@ -205,21 +192,18 @@ EOF
   "transport": {
     "udp": {
       "hopInterval": "30s"
-    },
-    "obfs": {
-      "type": "tls"
     }
   }
 }
 EOF
 
-    url="hysteria2://$auth_pwd@$last_ip:443/?insecure=1&sni=www.bing.com#$node_name"
+    url="hysteria2://$auth_pwd@$last_ip:7005/?insecure=1&sni=www.bing.com#$node_name"
     echo $url > /root/hy/url.txt
-    
+
     systemctl daemon-reload
-    systemctl enable hysteria-server
+    systemctl enable hysteria-server > /dev/null 2>&1
     systemctl start hysteria-server
-    
+
     if [[ ! -f /etc/systemd/system/hysteria-autostart.service ]]; then
         cat > /etc/systemd/system/hysteria-autostart.service << EOF
 [Unit]
@@ -235,16 +219,16 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 EOF
         systemctl daemon-reload
-        systemctl enable hysteria-autostart
+        systemctl enable hysteria-autostart >/dev/null 2>&1
     fi
-    
-    if [[ -n $(systemctl status hysteria-server | grep -w active) ]]; then
+
+    if [[ -n $(systemctl status hysteria-server 2>/dev/null | grep -w active) ]]; then
         green "======================================================================================"
         green "Hysteria 2 安装成功！"
         yellow "端口: 443"
         yellow "密码: $auth_pwd"
         yellow "伪装网站: en.snu.ac.kr"
-        yellow "TLS SNI: www.bing.com"
+        yellow "TLS SNI: en.snu.ac.kr"
         yellow "节点名称: $node_name"
         echo ""
         yellow "客户端配置已保存到: /root/hy/"
@@ -258,22 +242,22 @@ EOF
 
 # 卸载Hysteria2
 uninstall_hy2() {
-    systemctl stop hysteria-server
-    systemctl disable hysteria-server
-    systemctl disable hysteria-autostart
-    
+    systemctl stop hysteria-server >/dev/null 2>&1
+    systemctl disable hysteria-server >/dev/null 2>&1
+    systemctl disable hysteria-autostart >/dev/null 2>&1
+
     rm -f /etc/systemd/system/hysteria-autostart.service
     rm -f /lib/systemd/system/hysteria-server.service /lib/systemd/system/hysteria-server@.service
     rm -rf /usr/local/bin/hysteria /etc/hysteria /root/hy
-    
+
     systemctl daemon-reload
-    
+
     green "Hysteria 2 已完全卸载！"
 }
 
 start_hy2() {
     systemctl start hysteria-server
-    if [[ -n $(systemctl status hysteria-server | grep -w active) ]]; then
+    if [[ -n $(systemctl status hysteria-server 2>/dev/null | grep -w active) ]]; then
         green "Hysteria 2 已启动"
     else 
         red "Hysteria 2 启动失败"
@@ -287,7 +271,7 @@ stop_hy2() {
 
 restart_hy2() {
     systemctl restart hysteria-server
-    if [[ -n $(systemctl status hysteria-server | grep -w active) ]]; then
+    if [[ -n $(systemctl status hysteria-server 2>/dev/null | grep -w active) ]]; then
         green "Hysteria 2 已重启"
     else 
         red "Hysteria 2 重启失败"
@@ -299,14 +283,14 @@ show_config() {
         red "配置文件不存在"
         return
     fi
-    
+
     green "======================================================================================"
     if [ -f "/root/hy/hy-client.yaml" ]; then
         yellow "YAML配置文件 (/root/hy/hy-client.yaml):"
         cat /root/hy/hy-client.yaml
         echo ""
     fi
-    
+
     if [ -f "/root/hy/url.txt" ]; then
         yellow "分享链接:"
         red "$(cat /root/hy/url.txt)"

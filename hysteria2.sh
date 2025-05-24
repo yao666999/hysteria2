@@ -124,7 +124,6 @@ quic:
   maxStreamReceiveWindow: 16777216
   initConnReceiveWindow: 33554432
   maxConnReceiveWindow: 33554432
-  max_udp_payload_size: 1500
 
 obfs:
   type: tls
